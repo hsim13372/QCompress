@@ -36,8 +36,8 @@ To instead install QCompress from source, clone this repository, ``cd`` into it,
 
 .. code-block:: bash
 
-	git clone [TODO:REPO_URL]
-	cd [TODO:REPO_NAME]
+	git clone https://github.com/hsim13372/QCompress
+	cd QCompress
 	pip install -e .
 
 Note that the pyQuil version used requires Python 3.6 or later. For installation on a user QMI, please click `here <https://github.com/hsim13372/QCompress/blob/master/qmi_instructions.rst>`__.

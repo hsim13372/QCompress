@@ -11,7 +11,7 @@ For installing QCompress on a user's Quantum Machine Image (QMI), we recommend t
 
 .. code-block:: bash
 
-	git clone git@github.com:hsim13372/QCompress.git
+	git clone https://github.com/hsim13372/QCompress
 	cd QCompress
 	pip install -e .
 
