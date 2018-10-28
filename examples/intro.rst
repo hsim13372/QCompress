@@ -25,13 +25,13 @@ Before going into the details, we use the following naming conventions for the t
 
 In the current version of QCompress, there are two main training schemes:
 
-1. Halfway training (or trash training) - In this scheme, we execute only the state preparation followed by the training circuit and count the probability of measure all 0's on the "trash" qubits (i.e. input qubits that are **not** the latent space qubits).
+1. **Halfway training** (or trash training) - In this scheme, we execute only the state preparation followed by the training circuit and count the probability of measure all 0's on the "trash" qubits (i.e. input qubits that are **not** the latent space qubits).
 
-2. Full training - In this scheme, we execute the entire circuit (state preparation, training, un-training, un-state preparation) and count the probability of measuring all 0's on the "output" qubits. There are two possible sub-strategies:
+2. **Full training** - In this scheme, we execute the entire circuit (state preparation, training, un-training, un-state preparation) and count the probability of measuring all 0's on the "output" qubits. There are two possible sub-strategies:
 
-2a. Full training with reset: With the ``RESET`` feature in pyQuil, we reset the input qubits (except the latent space qubit) such that these qubits **are** the refresh qubits in the latter half of the QAE circuit. Therefore, in total, this method requires :math:`n_{in}` qubits.
+2a. **Full training with reset**: With the ``RESET`` feature in pyQuil, we reset the input qubits (except the latent space qubit) such that these qubits **are** the refresh qubits in the latter half of the QAE circuit. Therefore, in total, this method requires :math:`n_{in}` qubits.
 
-2b. Full training without reset: Without the reset feature, we introduce new qubits for the refresh qubits. Therefore, in total, this method requires :math:`2 * n_{in} - n_{latent}` qubits.
+2b. **Full training without reset**: Without the reset feature, we introduce new qubits for the refresh qubits. Therefore, in total, this method requires :math:`2 * n_{in} - n_{latent}` qubits.
 
 
 **NOTE**: For the loss function, we average over the training set losses and negate the value to cast as a minimization problem. 
