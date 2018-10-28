@@ -26,7 +26,7 @@ from pyquil.quil import Program
 import numpy
 import scipy.optimize
 
-from utils import is_parametrized_circuit
+from qcompress.utils import is_parametrized_circuit
 
 
 class QAutoencoderError(Exception):

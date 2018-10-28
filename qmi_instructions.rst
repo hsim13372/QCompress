@@ -36,7 +36,7 @@ or
 .. code-block:: bash
 
 	tmux new -s <ENTER-SESSION-NAME>
-	source pyquil/venv/bin/activate
+	source ~/pyquil/venv/bin/activate
 
 	pip install jupyter
 	cd <ENTER-DIRECTORY-FOR-NOTEBOOK>

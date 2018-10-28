@@ -4,4 +4,4 @@ include README.rst
 include requirements.txt
 include setup.py
 include examples/*.ipynb
-recursive-include qcompress *.py *.hdf5 *.ipynb
+recursive-include src *.py *.hdf5 *.ipynb

@@ -22,7 +22,7 @@ import pytest
 import scipy.optimize
 from pyquil.gates import *
 from pyquil.quil import Program
-from qae_engine import QAutoencoderError, quantum_autoencoder
+from qcompress.qae_engine import QAutoencoderError, quantum_autoencoder
 
 
 @pytest.fixture
