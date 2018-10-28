@@ -3,7 +3,7 @@ import os
 from setuptools import setup, find_packages
 
 # This reads the __version__ variable
-exec(open('./qcompress/_version.py').read())
+exec(open('qcompress/_version.py').read())
 
 # README file as long_description
 long_description = open('README.rst').read()
@@ -22,8 +22,8 @@ setup(
     author='hannahsim',
     author_email='hsim13372@gmail.com',
     license='Apache-2.0',
-    packages=find_packages(where='./qcompress'),
-    package_dir={'': './qcompress'},
+    packages=find_packages(where='qcompress'),
+    package_dir={'': 'qcompress'},
     zip_safe=False,
     include_package_data=True,
     package_data={
