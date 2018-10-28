@@ -9,7 +9,7 @@ Description
 
 QCompress is a Python framework for the quantum autoencoder (QAE) algorithm. Using the code, the user can execute instances of the algorithm on either a quantum simulator or a quantum processor provided by Rigetti Computing's `Quantum Cloud Services <https://www.rigetti.com/qcs>`__. For a more in-depth description of QCompress (including the naming convention for the types of qubits involved in the QAE circuit), click `here <https://github.com/hsim13372/QCompress/blob/master/examples/intro.rst>`__. 
 
-For more information about the algorithm, see  Note that we deviate from the training technique used in the original paper and instead introduce two alternative autoencoder training schemes that require lower-depth circuits (see `Sim et al <https://arxiv.org/abs/1810.10576>`__).
+For more information about the algorithm, see `Romero et al <https://arxiv.org/abs/1612.02806>`__. Note that we deviate from the training technique used in the original paper and instead introduce two alternative autoencoder training schemes that require lower-depth circuits (see `Sim et al <https://arxiv.org/abs/1810.10576>`__).
 
 Features
 --------
