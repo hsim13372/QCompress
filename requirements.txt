@@ -1,0 +1,10 @@
+# Test
+pytest
+
+# Demo
+jupyter
+
+# Code
+pyquil>=2.0.0b1
+openfermion>=0.8
+quantum-grove>=1.7.0
