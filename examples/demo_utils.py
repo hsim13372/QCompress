@@ -3,8 +3,10 @@ Class for generating a program that can generate an arbitrary quantum state.
 Original routines from Rigetti Computing's grove module.
 """
 import numpy as np
+from openfermion.ops import QubitOperator
 import pyquil.quil as pq
 from pyquil.gates import *
+from pyquil.paulis import PauliSum, PauliTerm
 
 
 def get_uniformly_controlled_rotation_matrix(k):
@@ -262,3 +264,26 @@ def create_arbitrary_state(vector, qubits=None):
 
     # Apply all gates in reverse
     return reversed_prog
+
+def qubitop_to_pyquilpauli(qubit_operator):
+    """
+    Convert a OpenFermion QubitOperator to a PauliSum. This is a routine in forestopenfermion
+    but it was placed here because there was an installation issue with forestopenfermion using pip.
+    
+    :param QubitOperator qubit_operator: OpenFermion QubitOperator to convert to a pyquil.PauliSum
+    :return: PauliSum representing the qubit operator
+    :rtype: PauliSum
+    """
+    if not isinstance(qubit_operator, QubitOperator):
+        raise TypeError("qubit_operator must be a OpenFermion "
+                        "QubitOperator object")
+
+    transformed_term = PauliTerm("I", 0, 0.0)
+    for qubit_terms, coefficient in qubit_operator.terms.items():
+        base_term = PauliTerm('I', 0)
+        for tensor_term in qubit_terms:
+            base_term *= PauliTerm(tensor_term[1], tensor_term[0])
+
+        transformed_term += base_term * coefficient
+
+    return transformed_term

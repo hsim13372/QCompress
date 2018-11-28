@@ -18,7 +18,6 @@
 """Utility functions for the quantum autoencoder."""
 
 import numpy as np
-from openfermion.ops import QubitOperator
 from pyquil.paulis import PauliSum, PauliTerm
 from pyquil.quilbase import Declare
 
@@ -68,26 +67,3 @@ def merge_two_dicts(dict1, dict2):
     merged_dict = dict1.copy()
     merged_dict.update(dict2)
     return merged_dict
-
-def qubitop_to_pyquilpauli(qubit_operator):
-    """
-    Convert a OpenFermion QubitOperator to a PauliSum. This is a routine in forestopenfermion
-    but it was placed here because there was an installation issue with forestopenfermion using pip.
-    
-    :param QubitOperator qubit_operator: OpenFermion QubitOperator to convert to a pyquil.PauliSum
-    :return: PauliSum representing the qubit operator
-    :rtype: PauliSum
-    """
-    if not isinstance(qubit_operator, QubitOperator):
-        raise TypeError("qubit_operator must be a OpenFermion "
-                        "QubitOperator object")
-
-    transformed_term = PauliTerm("I", 0, 0.0)
-    for qubit_terms, coefficient in qubit_operator.terms.items():
-        base_term = PauliTerm('I', 0)
-        for tensor_term in qubit_terms:
-            base_term *= PauliTerm(tensor_term[1], tensor_term[0])
-
-        transformed_term += base_term * coefficient
-
-    return transformed_term
