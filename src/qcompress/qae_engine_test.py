@@ -143,12 +143,6 @@ def test_full_no_reset_attributes(full_no_reset_inst):
                 '  Connection type: None')
     assert str(full_no_reset_inst) == test_str
 
-def test_faulty_full_no_reset():
-    """Test for trying to instantiate a QAE employing full training, no reset
-    without inputing q_refresh."""
-    with pytest.raises(ValueError):
-        full_no_reset_inst(q_refresh={})
-
 def test_faulty_full_no_reset_no_daggered_circuits():
     """Test for trying to instantiate a QAE employing full training, no reset
     without inputing daggered circuits. Should also apply to full, reset case."""
@@ -309,7 +303,7 @@ def test_trying_to_train_without_proper_setup(full_no_reset_inst):
     with pytest.raises(AttributeError):
         train_loss = full_no_reset_inst.train(initial_guess)
 
-    full_no_reset_inst.setup_forest_cxn('qvm')
+    full_no_reset_inst.setup_forest_cxn('9q-square-qvm')
     assert full_no_reset_inst.minimizer == scipy.optimize.minimize
 
 def test_trying_to_predict_without_training(full_no_reset_inst):
@@ -328,7 +322,7 @@ def test_cobyla_output(full_no_reset_inst):
                                       'options': {'disp': False, 'maxiter': niter,
                                       'tol': 1e-04, 'rhobeg': 0.10}})
 
-    full_no_reset_inst.setup_forest_cxn('9q-generic-qvm')
+    full_no_reset_inst.setup_forest_cxn('9q-square-qvm')
     
     test_str = ('QCompress Setting\n'
                 '=================\n'
@@ -338,7 +332,7 @@ def test_cobyla_output(full_no_reset_inst):
                 'Training mode: full cost function\n'
                 '  Reset qubits: False\n'
                 'Parametric compilation: False\n'
-                'Forest connection: 9q-generic-qvm\n'
+                'Forest connection: 9q-square-qvm\n'
                 '  Connection type: QVM')
     assert str(full_no_reset_inst) == test_str
 
@@ -362,7 +356,7 @@ def test_cobyla_output(full_no_reset_inst):
 #     full_no_reset_inst.minimizer_kwargs = ({'xtol':0.0001, 'ftol':0.0001, 'maxiter':0,
 #                                       'full_output':1, 'retall': 0})
 
-#     full_no_reset_inst.setup_forest_cxn('qvm')
+#     full_no_reset_inst.setup_forest_cxn('9q-square-qvm')
 #     full_no_reset_inst.train_test_split(train_ratio=0.2)
 #     initial_guess = [0, 0]
 
@@ -403,7 +397,7 @@ def test_bfgs_output(full_no_reset_inst):
     full_no_reset_inst.minimizer_kwargs = ({'maxiter': niter, 'full_output': 1,
                                            'retall': 0, 'disp': 0})
 
-    full_no_reset_inst.setup_forest_cxn('qvm')
+    full_no_reset_inst.setup_forest_cxn('9q-square-qvm')
     full_no_reset_inst.train_test_split(train_ratio=0.2)
     initial_guess = [0, 0]
 
@@ -421,7 +415,7 @@ def test_full_training_with_reset(full_reset_inst):
     assert full_reset_inst.reset == True
     assert full_reset_inst.q_refresh == {'q0': 0}
 
-    full_reset_inst.setup_forest_cxn('qvm')
+    full_reset_inst.setup_forest_cxn('9q-square-qvm')
     full_reset_inst.train_test_split(train_ratio=0.2)
     params = [numpy.pi/2., 0.]
     index = 0
@@ -439,7 +433,7 @@ def test_halfway_training(halfway_inst):
     """Test when halfway training."""
     assert halfway_inst.trash_training == True
 
-    halfway_inst.setup_forest_cxn('qvm')
+    halfway_inst.setup_forest_cxn('9q-square-qvm')
     halfway_inst.train_test_split(train_ratio=0.2)
     params = [numpy.pi/2., 0.]
     index = 0
