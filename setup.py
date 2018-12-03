@@ -24,10 +24,9 @@ setup(
     license='Apache-2.0',
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    zip_safe=False,
     include_package_data=True,
     package_data={
-        '': [os.path.join('data', '*.hdf5'),
+        '': [os.path.join('src', 'qcompress', 'data', '*.hdf5'),
              os.path.join('images', '*.png')]
     },
     python_requires=">=3.6"
