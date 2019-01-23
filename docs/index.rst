@@ -15,7 +15,6 @@ This code is based on an older `version <https://github.com/hsim13372/QCompress-
 * Several training schemes for the autoencoder
 * Use of the ``RESET`` operation for the encoding qubits (lowers qubit requirement)
 * User-definable training circuit and/or classical optimization routine
-* **[WIP]**: Use of parametric compilation (supported but being optimized. Notebook coming soon.)
 
 
 Contents

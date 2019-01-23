@@ -4,22 +4,32 @@
 Installing QCompress
 ====================
 
-To install QCompress using ``pip``:
+There are a few options for installing QCompress:
+
+1. To install QCompress using ``pip``, execute:
 
 .. code-block:: bash
 
 	pip install qcompress
 
-Try executing ``import qcompress`` to test the installation in your terminal.
+
+2. To install QCompress using ``conda``, execute:
+
+.. code-block:: bash
+
+	conda install -c rigetti -c hsim13372 qcompress
 
 
-To instead install QCompress from source, clone this repository, ``cd`` into it, and run:
+3. To instead install QCompress from source, clone this repository, ``cd`` into it, and run:
 
 .. code-block:: bash
 
 	git clone https://github.com/hsim13372/QCompress
 	cd QCompress
 	python -m pip install -e .
+
+
+Try executing ``import qcompress`` to test the installation in your terminal.
 
 Note that the pyQuil version used requires Python 3.6 or later.
 
