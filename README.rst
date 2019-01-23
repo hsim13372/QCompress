@@ -20,17 +20,25 @@ This code is based on an older `version <https://github.com/hsim13372/QCompress-
 * Several training schemes for the autoencoder
 * Use of the ``RESET`` operation for the encoding qubits (lowers qubit requirement)
 * User-definable training circuit and/or classical optimization routine
-* **[WIP]**: Use of parametric compilation (supported but being optimized. Notebook coming soon.)
 
 
 Installation
 ============
 
-To install QCompress using ``pip``:
+To install QCompress using ``pip``, execute:
 
 .. code-block:: bash
 
 	pip install qcompress
+
+Try executing ``import qcompress`` to test the installation in your terminal.
+
+
+To install QCompress using ``conda``, execute:
+
+.. code-block:: bash
+
+	conda install -c rigetti -c hsim13372 qcompress
 
 Try executing ``import qcompress`` to test the installation in your terminal.
 
