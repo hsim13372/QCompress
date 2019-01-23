@@ -26,8 +26,7 @@ from qcompress.qae_engine import QAutoencoderError, quantum_autoencoder
 
 
 @pytest.fixture
-def full_no_reset_inst(trash_training=False, reset=False,
-                       q_refresh={'q2': 2}, parametric_compilation=False):
+def full_no_reset_inst(trash_training=False, reset=False, q_refresh={'q2': 2}):
     """Returns a valid QAE instance, employing full training without reset option."""
     q_in = {'q0': 0, 'q1': 1}
     q_latent = {'q1': 1}
@@ -56,7 +55,6 @@ def full_no_reset_inst(trash_training=False, reset=False,
                                q_in=q_in, q_latent=q_latent, q_refresh=q_refresh,
                                state_prep_circuits_dag=list_SP_circuits_dag,
                                training_circuit_dag=training_circuit_dag,
-                               parametric_compilation=parametric_compilation,
                                trash_training=trash_training, reset=reset, 
                                n_shots=n_shots, verbose=False)
 
@@ -138,7 +136,7 @@ def test_full_no_reset_attributes(full_no_reset_inst):
                 'Training set size: 0\n'
                 'Training mode: full cost function\n'
                 '  Reset qubits: False\n'
-                'Parametric compilation: False\n'
+                'Compile program: False\n'
                 'Forest connection: None\n'
                 '  Connection type: None')
     assert str(full_no_reset_inst) == test_str
@@ -152,7 +150,6 @@ def test_faulty_full_no_reset_no_daggered_circuits():
     n_shots = 10
     trash_training = False
     reset = False
-    parametric_compilation = False
 
     sp_circuit = lambda theta, qubit_indices: Program(RY(theta[0], qubit_indices[1]),
                                                       CNOT(qubit_indices[1], qubit_indices[0]))
@@ -171,7 +168,6 @@ def test_faulty_full_no_reset_no_daggered_circuits():
         faulty = quantum_autoencoder(state_prep_circuits=list_SP_circuits,
                                    training_circuit=training_circuit,
                                    q_in=q_in, q_latent=q_latent, q_refresh=q_refresh,
-                                   parametric_compilation=parametric_compilation,
                                    trash_training=trash_training, reset=reset, 
                                    n_shots=n_shots, verbose=False)
 
@@ -193,7 +189,7 @@ def test_full_reset_attributes(full_reset_inst):
                 'Training set size: 0\n'
                 'Training mode: full cost function\n'
                 '  Reset qubits: True\n'
-                'Parametric compilation: False\n'
+                'Compile program: False\n'
                 'Forest connection: None\n'
                 '  Connection type: None')
     assert str(full_reset_inst) == test_str
@@ -215,7 +211,7 @@ def test_halfway_attributes(halfway_inst):
                 'Data size: 5\n'
                 'Training set size: 0\n'
                 'Training mode: halfway cost function\n'
-                'Parametric compilation: False\n'
+                'Compile program: False\n'
                 'Forest connection: None\n'
                 '  Connection type: None')
     assert str(halfway_inst) == test_str
@@ -224,49 +220,6 @@ def test_invalid_forest_cxn(full_no_reset_inst):
     """Test for trying to set up invalid Forest connection."""
     with pytest.raises(NotImplementedError):
         full_no_reset_inst.setup_forest_cxn('MADEUP_NONSENSE')
-
-def test_faulty_qae_setup_parametric():
-    """Test for trying to set parametric compilation to unfit QAE setup.
-    That is, the input circuits do not employ parametric circuits using 
-    MemoryReference."""
-    q_in = {'q0': 0, 'q1': 1}
-    q_latent = {'q1': 1}
-    n_shots = 10
-    trash_training = True
-    reset = True
-    parametric_compilation = True # Turn on
-
-    sp_circuit = lambda theta, qubit_indices: Program(RY(theta[0], qubit_indices[1]),
-                                                      CNOT(qubit_indices[1], qubit_indices[0]))
-    list_SP_circuits = []
-    angle_list = numpy.linspace(-10, 10, 5) # Generate 5 data pts
-
-    for angle in angle_list:
-        state_prep_unitary = sp_circuit([angle], [0, 1])
-        list_SP_circuits.append(state_prep_unitary)
-
-    training_circuit = lambda theta, qubit_indices=[0, 1]: Program(RY(-theta[0]/2, qubit_indices[0]),
-                                                            CNOT(qubit_indices[1], qubit_indices[0]))
-
-    with pytest.raises(QAutoencoderError):
-        faulty = quantum_autoencoder(state_prep_circuits=list_SP_circuits,
-                                   training_circuit=training_circuit,
-                                   q_in=q_in, q_latent=q_latent,
-                                   parametric_compilation=parametric_compilation,
-                                   trash_training=trash_training, reset=reset, 
-                                   n_shots=n_shots, verbose=False)
-    
-def test_faulty_parametric_compilation_attempt(full_no_reset_inst):
-    """Test for trying to parametrically compile unsuitable circuits."""
-    # User changes the flag in the middle of the computation
-    full_no_reset_inst.parametric_compilation = True
-    parameters = [0, 0]
-    index = 0
-    with pytest.raises(QAutoencoderError):
-        full_no_reset_inst.construct_compression_circuit(parameters, index)
-
-    with pytest.raises(QAutoencoderError):
-        full_no_reset_inst.construct_recovery_circuit(parameters, index)
 
 def test_inputing_invalid_train_indices(full_no_reset_inst):
     """Test for user trying to input invalid training indices when
@@ -303,7 +256,7 @@ def test_trying_to_train_without_proper_setup(full_no_reset_inst):
     with pytest.raises(AttributeError):
         train_loss = full_no_reset_inst.train(initial_guess)
 
-    full_no_reset_inst.setup_forest_cxn('9q-square-qvm')
+    full_no_reset_inst.setup_forest_cxn('9q-qvm')
     assert full_no_reset_inst.minimizer == scipy.optimize.minimize
 
 def test_trying_to_predict_without_training(full_no_reset_inst):
@@ -322,7 +275,7 @@ def test_cobyla_output(full_no_reset_inst):
                                       'options': {'disp': False, 'maxiter': niter,
                                       'tol': 1e-04, 'rhobeg': 0.10}})
 
-    full_no_reset_inst.setup_forest_cxn('9q-square-qvm')
+    full_no_reset_inst.setup_forest_cxn('4q-qvm')
     
     test_str = ('QCompress Setting\n'
                 '=================\n'
@@ -331,8 +284,8 @@ def test_cobyla_output(full_no_reset_inst):
                 'Training set size: 0\n'
                 'Training mode: full cost function\n'
                 '  Reset qubits: False\n'
-                'Parametric compilation: False\n'
-                'Forest connection: 9q-square-qvm\n'
+                'Compile program: False\n'
+                'Forest connection: 4q-qvm\n'
                 '  Connection type: QVM')
     assert str(full_no_reset_inst) == test_str
 
@@ -397,7 +350,7 @@ def test_bfgs_output(full_no_reset_inst):
     full_no_reset_inst.minimizer_kwargs = ({'maxiter': niter, 'full_output': 1,
                                            'retall': 0, 'disp': 0})
 
-    full_no_reset_inst.setup_forest_cxn('9q-square-qvm')
+    full_no_reset_inst.setup_forest_cxn('4q-qvm')
     full_no_reset_inst.train_test_split(train_ratio=0.2)
     initial_guess = [0, 0]
 
@@ -415,7 +368,7 @@ def test_full_training_with_reset(full_reset_inst):
     assert full_reset_inst.reset == True
     assert full_reset_inst.q_refresh == {'q0': 0}
 
-    full_reset_inst.setup_forest_cxn('9q-square-qvm')
+    full_reset_inst.setup_forest_cxn('4q-qvm')
     full_reset_inst.train_test_split(train_ratio=0.2)
     params = [numpy.pi/2., 0.]
     index = 0
@@ -433,7 +386,7 @@ def test_halfway_training(halfway_inst):
     """Test when halfway training."""
     assert halfway_inst.trash_training == True
 
-    halfway_inst.setup_forest_cxn('9q-square-qvm')
+    halfway_inst.setup_forest_cxn('4q-qvm')
     halfway_inst.train_test_split(train_ratio=0.2)
     params = [numpy.pi/2., 0.]
     index = 0

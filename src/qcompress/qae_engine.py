@@ -26,8 +26,6 @@ from pyquil.quil import Program
 import numpy
 import scipy.optimize
 
-from qcompress.utils import is_parametrized_circuit
-
 
 class QAutoencoderError(Exception):
     """quantum_autoencoder-related error."""
@@ -65,9 +63,8 @@ class quantum_autoencoder:
                             (trash state) cost function. Default is full-cost function, i.e. Default=False
     :param reset: (bool, Optional) Boolean for resetting input qubits for full-cost function training.
                     Default=True
-    :param parametric_compilation: (bool, Optional) Boolean for enabling parametric compilation. Default=False
-    :param param_name: (str, Optional) Name of parameter if enabling parametric compilation
-                        i.e. name of MemoryReference. Default='theta'
+    :param compile_program: (bool, Optional) Boolean for compiling circuits. Set to False for faster simulations.
+                    Default=False
     :param minimizer: Function that minimizes objective f(obj, param). For
                     example the function scipy.optimize.minimize() needs
                     at least two parameters, the objective and an initial
@@ -86,8 +83,8 @@ class quantum_autoencoder:
     :param print_interval: (int, Optional) Printing frequency. Default=10
     """
     def __init__(self, q_in, q_latent, state_prep_circuits, training_circuit, state_prep_circuits_dag=None,
-                 training_circuit_dag=None, q_refresh={}, trash_training=False, reset=True, parametric_compilation=False,
-                 param_name='theta', minimizer=None, minimizer_args=[], minimizer_kwargs={}, opt_result_parse=None,
+                 training_circuit_dag=None, q_refresh={}, trash_training=False, reset=True, compile_program=False,
+                 minimizer=None, minimizer_args=[], minimizer_kwargs={}, opt_result_parse=None,
                  n_shots=1000, verbose=True, print_interval=10):
         """
         Initializes QAE instance.
@@ -149,19 +146,7 @@ class quantum_autoencoder:
         self.n_shots = n_shots
         self.forest_cxn = None
         self.cxn_type = None
-
-        # Parametric compilation setting
-        self.parametric_compilation = parametric_compilation
-        if self.parametric_compilation:
-            try:
-                self.parametric_compilation = is_parametrized_circuit(self.training_circuit,
-                                                                      param_name)
-            except AttributeError:
-                raise QAutoencoderError('Training circuit cannot be parametrically compiled.')
-
-        if self.parametric_compilation:
-            self.param_name = param_name
-            self.compiled_qae_circuits = []
+        self.compile_program = compile_program
 
         # Optimizer setting
         self.minimizer = minimizer
@@ -177,6 +162,9 @@ class quantum_autoencoder:
         self.verbose = verbose
         self.print_interval = print_interval
 
+        # Determine physical qubits to measure
+        self._determine_qubits_to_measure()
+
     def __str__(self):
         qae_str  = 'QCompress Setting\n'
         qae_str += '=================\n'
@@ -188,7 +176,7 @@ class quantum_autoencoder:
         else: 
             qae_str += 'Training mode: full cost function\n'
             qae_str += '  Reset qubits: {0}\n'.format(self.reset)
-        qae_str += 'Parametric compilation: {0}\n'.format(self.parametric_compilation)
+        qae_str += 'Compile program: {0}\n'.format(self.compile_program)
         qae_str += 'Forest connection: {0}\n'.format(self.forest_cxn)
         qae_str += '  Connection type: {0}'.format(self.cxn_type)
         return qae_str
@@ -204,9 +192,10 @@ class quantum_autoencoder:
             self.forest_cxn = get_qc(*args, **kwargs)
             
             if isinstance(self.forest_cxn.qam, QVM):
-            	self.cxn_type = "QVM"
+                self.cxn_type = "QVM"
             elif isinstance(self.forest_cxn.qam, QPU):
-            	self.cxn_type = "QPU"
+                self.cxn_type = "QPU"
+                self.compile_program = True
         except: 
             raise NotImplementedError("This qvm/qpu specification is invalid. Please see args for get_qc.")
 
@@ -247,14 +236,8 @@ class quantum_autoencoder:
         :rtype: Program
         """
         compression_circuit = Program()
-        compression_circuit += self.state_prep_circuits[index]
-        if self.parametric_compilation:
-            try:
-                compression_circuit += self.training_circuit
-            except:
-                raise QAutoencoderError("Circuit cannot be constructed.")
-        else:
-            compression_circuit += self.training_circuit(parameters)
+        compression_circuit.inst(self.state_prep_circuits[index])
+        compression_circuit.inst(self.training_circuit(parameters))
         return compression_circuit
 
     def construct_recovery_circuit(self, parameters, index):
@@ -278,20 +261,14 @@ class quantum_autoencoder:
         if self.trash_training:
             raise QAutoencoderError("Invalid command for halfway training!")
         
-        if self.parametric_compilation:
-            try:
-                recovery_circuit += self.training_circuit_dag
-            except:
-                raise QAutoencoderError("Circuit cannot be constructed.")
-        else:
-            recovery_circuit += self.training_circuit_dag(parameters)
-        recovery_circuit += self.state_prep_circuits_dag[index]
+        recovery_circuit.inst(self.training_circuit_dag(parameters))
+        recovery_circuit.inst(self.state_prep_circuits_dag[index])
         return recovery_circuit
 
     def _determine_qubits_to_measure(self):
         """
-        Helper function for determining which physical
-        qubits to measure, based on autoencoder setting
+        Helper function for determining which physical qubits
+        to measure, based on autoencoder setting.
         """
         # Option 1: Halfway/trash training
         if self.trash_training:
@@ -322,42 +299,15 @@ class quantum_autoencoder:
         :rtype: float
         :raises: ApiError
         """
-        if not self.parametric_compilation:
-            try:
-                bitstrings = self.forest_cxn.run(qae_circuit_executable)
-            except (ApiError, AttributeError) as err:
-                raise err
-        else:
-            try:
-                self.forest_cxn.qam.load(qae_circuit_executable)
-                for j, param_val in enumerate(parameters):
-                    self.forest_cxn.qam.write_memory(region_name=self.param_name, offset=j, value=parameters[j])
-                self.forest_cxn.qam.run()
-                self.forest_cxn.qam.wait()
-                bitstrings = self.forest_cxn.qam.read_from_memory_region(region_name='ro')
-            except (ApiError, AttributeError) as err:
-                raise err
+        try:
+            bitstrings = self.forest_cxn.run(qae_circuit_executable)
+        except (ApiError, AttributeError) as err:
+            raise err
 
         if isinstance(bitstrings, numpy.ndarray):
             bitstrings = bitstrings.tolist()
         single_loss = float(bitstrings.count([0] * memory_size)) / float(self.n_shots)
         return single_loss
-
-    def _manage_measurement(self, memory_size, physical_labels):
-        """
-        Returns a program that manages readout memory and measures relevant
-        qubits, depending on the training technique.
-
-        :param memory_size: (int) Number of array elements in the declared memory
-        :param physical_labels: (list) List of physical indices of qubits to measure
-        :returns: Circuit component for measurements
-        :rtype: Program
-        """
-        meas_circuit = Program()
-        ro = meas_circuit.declare('ro', memory_type='BIT', memory_size=memory_size)
-        for i in range(memory_size):
-            meas_circuit += MEASURE(physical_labels[i], ro[i])
-        return meas_circuit
 
     def _compute_loss(self, parameters, history_list, dataset_type, indices=None):
         """
@@ -376,33 +326,24 @@ class quantum_autoencoder:
         # Compute cost function value for each data point
         for i, index in enumerate(indices):
 
-            if self.n_iter == 0 or not self.parametric_compilation or dataset_type == 1:
+            # Apply compression and recovery maps
+            qae_circuit = Program()
+            qae_circuit.inst(self.construct_compression_circuit(parameters, index))
+            if not self.trash_training:
+                qae_circuit.inst(self.construct_recovery_circuit(parameters, index))
 
-                qae_circuit = Program()
-                qae_circuit += self.construct_compression_circuit(parameters, index)
-
-                self._determine_qubits_to_measure()
-
-                if not self.trash_training:
-                    qae_circuit += self.construct_recovery_circuit(parameters, index)
-
-                # Apply measurement operations
-                qae_circuit += self._manage_measurement(self.memory_size, self._physical_labels)
-                
-                # Compile circuit
-                qae_circuit_wrapped = qae_circuit.wrap_in_numshots_loop(self.n_shots)
-                native_quil_circuit = self.forest_cxn.compiler.quil_to_native_quil(qae_circuit_wrapped)
-                qae_circuit_executable = self.forest_cxn.compiler.native_quil_to_executable(native_quil_circuit)
-
-            # Save parametrized circuits if using parametric compilation feature
-            if self.parametric_compilation and dataset_type == 0:
-                if self.n_iter == 0:
-                    self.compiled_qae_circuits.append(qae_circuit_executable)
-                else:
-                    qae_circuit_executable = self.compiled_qae_circuits[i]
+            # Apply measurement operations
+            ro = qae_circuit.declare('ro', memory_type='BIT', memory_size=self.memory_size)
+            for j in range(self.memory_size):
+                qae_circuit.inst(MEASURE(self._physical_labels[j], ro[j]))
+            
+            # Prepare circuit execution
+            qae_circuit = qae_circuit.wrap_in_numshots_loop(self.n_shots)
+            if self.compile_program:
+                qae_circuit = self.forest_cxn.compile(qae_circuit)
 
             # Compute loss for the data point and store
-            single_loss = self._execute_circuit(parameters, qae_circuit_executable, self.memory_size)
+            single_loss = self._execute_circuit(parameters, qae_circuit, self.memory_size)
             losses.append(single_loss)
 
         mean_loss = -1. * numpy.mean(losses)
