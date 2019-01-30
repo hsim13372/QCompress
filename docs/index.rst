@@ -25,6 +25,9 @@ Contents
 
    intro
    qae_description
+   qae_h2_demo
+   qae_two_qubit_demo
+   run_landscape_scan
 
 
 API Reference
@@ -34,7 +37,6 @@ API Reference
    :maxdepth: 1
 
    source/qcompress
-
 
 Indices and tables
 ------------------
