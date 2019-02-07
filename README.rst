@@ -3,6 +3,9 @@
 QCompress
 =========
 
+.. image:: https://readthedocs.org/projects/qcompress/badge/?version=latest
+:target: https://qcompress.readthedocs.io/en/latest/?badge=latest
+:alt: Documentation Status
 
 Description
 ===========
